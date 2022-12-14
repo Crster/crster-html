@@ -89,3 +89,22 @@ test("render view", () => {
 
   expect(result).toBe("\r\n<p>Hi, Hello World</p>\r\nThis is a footer");
 });
+
+test("render script", () => {
+  const data = {
+    name: "Crster",
+    age: 30,
+  };
+
+  const result = crsterHtml.render(`
+    <script>
+      let name = "{name}" + {age};
+      
+      function setName(newName){
+        name = newName;
+      }
+    </script>
+  `, data);
+
+  expect(result).toContain(`let name = "${data.name}" + ${data.age}`);
+})
