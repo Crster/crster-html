@@ -1,60 +1,91 @@
-const crsterHtml = require("./index.js");
+const crsterHtml = require("./index");
 
-const view = `
-<view {layout}>
-<block {style}>
-  <style>
-    .blue {
-      color: blue;
-    }
-  </style>
-</block>
+test("render hello world", () => {
+  const result = crsterHtml.render("<p>Hello World</p>");
+  expect(result).toBe("<p>Hello World</p>");
+});
 
-<block {script}>
-  <script>
-    let counter = 0;
-    function addCounter() {
-      setValue(counter++);
-    }
-  </script>
-</block>
+test("render hello world from variable", () => {
+  const data = {
+    world: "Hello",
+    hello: "World",
+  };
 
-<block {body}>
-  <p class="blue">{counter} {users.length}</p>
+  const result = crsterHtml.render("<p>{world} {hello}</p>", data);
+  expect(result).toBe(`<p>${data.world} ${data.hello}</p>`);
+});
 
-  <switch {!!counter}>
-      <case {true}>
-          <p>click button to start</p>
-      </case>
-      <case {false}>
-        <p>continue clicking</p>
-      </case>
-  </switch>
+test("render calculation", () => {
+  const result = crsterHtml.render("<p>1 + 2 = {2 + 1}</p>");
+  expect(result).toBe("<p>1 + 2 = 3</p>");
+});
 
-  <for {user of users}>
-      <p>{user.name}</p>
-     <for {ads of user.addresses}>
-       <p>{ads.title}</p>
-     </for>
-  </for>
+test("render list", () => {
+  const data = {
+    animals: [
+      { name: "Dog", sound: "Roff" },
+      { name: "Cat", sound: "Meow" },
+      { name: "Goat", sound: "Meee" },
+    ],
+  };
 
-  <button onclick="addCounter()">Click Me!</button>
-</block>
-</view>`;
+  const result = crsterHtml.render(
+    "<ul><for {animal of animals}><li>A {animal.name} says {animal.sound}<li></for></ul>",
+    data
+  );
 
-const args = {
-  counter: 0,
-  users: [
-    { name: "Amiel", addresses: [{ title: "Aplaya" }, { title: "Digos" }] },
-    { name: "Hussien", addresses: [{ title: "Aplaya" }] },
+  expect(result).toBe(
+    `<ul>${data.animals
+      .map((animal) => `<li>A ${animal.name} says ${animal.sound}<li>`)
+      .join("")}</ul>`
+  );
+});
+
+test("render condition", () => {
+  const data = {
+    name: "Crster",
+    age: 30,
+  };
+
+  const result = crsterHtml.render(
+    "<switch {age > 20}><case {true}>{name} is old</case><case {false}>{name} is still young</case></switch>",
+    data
+  );
+
+  expect(result).toBe(`${data.name} is old`);
+});
+
+test("render multiple condition", () => {
+  const data = {
+    name: "Crster",
+    age: 30,
+  };
+
+  const result = crsterHtml.render(
+    '<switch {name}><case {"John"}>Not Me</case><case {"Ray"}>Not Me</case><case {"Crster"}>This is me</case><case {"Jest"}>Not Me</case></switch>',
+    data
+  );
+
+  expect(result).toBe("This is me");
+});
+
+test("render view", () => {
+  const data = {
+    world: "Hello",
+    hello: "World",
+  };
+
+  const template =
+    "<view {layout}><block {footer}>This is a footer</block><p>Hi, {world} {hello}</p></view>";
+
+  const result = crsterHtml.render(
     {
-      name: "Apiag",
-      addresses: [{ title: "Cebu" }, { title: "Mactan" }, { title: "Leyte" }],
+      currentWorkingDirectory: "./components",
+      defaultFileExtension: "html",
+      template,
     },
-    { name: "Dagadas", addresses: [] },
-  ],
-};
+    data
+  );
 
-const res = crsterHtml.render(view, args);
-
-console.log(res);
+  expect(result).toBe("\r\n<p>Hi, Hello World</p>\r\nThis is a footer");
+});

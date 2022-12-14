@@ -4,6 +4,7 @@ import IInput from "./IInput";
 import evaluate from "./evaluate";
 import ITemplate from "./ITemplate";
 import IBlock from "./IBlock";
+import extractBlock from "./extractBlock";
 
 function renderView(block: IBlock, input?: IInput): string {
   let viewPath = path.join(block.currentWorkingDirectory, block.header);
@@ -19,16 +20,41 @@ function renderView(block: IBlock, input?: IInput): string {
       defaultFileExtension: block.defaultFileExtension,
       template: fs.readFileSync(viewPath).toString(),
     };
-    const renderedView = render(viewTemplate, input);
+    let renderedView = render(viewTemplate, input);
 
     const template: ITemplate = {
       currentWorkingDirectory: block.currentWorkingDirectory,
       defaultFileExtension: block.defaultFileExtension,
       template: block.body,
     };
-    const renderedViewBody = render(template, input);
+    let renderedViewBody = render(template, input);
 
-    return `${renderedView}\n\n\n\n\n\n\n${renderedViewBody}`;
+    const viewBlocks = extractBlock(renderedView);
+    const viewBodyBlocks = extractBlock(renderedViewBody);
+
+    for (const vbb of Object.values(viewBodyBlocks)) {
+      renderedViewBody = renderedViewBody.replace(vbb.template, "");
+    }
+
+    if (viewBlocks["body"]) {
+      viewBlocks["body"].body.push(renderedViewBody);
+    }
+
+    for (const vb of Object.values(viewBlocks)) {
+      if (viewBodyBlocks[vb.header]) {
+        viewBlocks[vb.header].body.push(...viewBodyBlocks[vb.header].body)
+      }
+    }
+
+    for (const vb of Object.values(viewBlocks)) {
+      if (vb.body.length > 0) {
+        renderedView = renderedView.replace(vb.template, vb.body.join("\n"));
+      } else {
+        renderedView = renderedView.replace(vb.template, "");
+      }
+    }
+
+    return renderedView;
   } catch {
     return "";
   }
@@ -46,7 +72,7 @@ function renderBlock(block: IBlock, input?: IInput): string {
     body = render(template, input);
   }
 
-  return `[[[${block.header}|||${body}]]]`;
+  return `<< header="${block.header}" body="${body}">>`;
 }
 
 function renderSwitch(block: IBlock, input?: IInput): string {
@@ -112,7 +138,7 @@ function render(template: ITemplate | string, input?: IInput): string {
   const mlBlockRegx = new RegExp("<block\\s+{(.+?)}>(.+?)<\\/block>", "gsi");
   const forRegx = new RegExp("<for\\s+{(.+?)}>(.+)<\\/for>", "gsi");
   const switchBlockRegx = new RegExp(
-    "/<switch\\s+{(.+?)}>(.+)<\\/switch>",
+    "<switch\\s+{(.+?)}>(.+)<\\/switch>",
     "gsi"
   );
   const codeBlockRegx = new RegExp("{(.+?)}", "g");
