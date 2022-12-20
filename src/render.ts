@@ -141,7 +141,7 @@ function render(template: ITemplate | string, input?: IInput): string {
     "<switch\\s+{(.+?)}>(.+)<\\/switch>",
     "gsi"
   );
-  const codeBlockRegx = new RegExp("{(.+?)}", "g");
+  const codeBlockRegx = new RegExp("{([^{}\\r\\n]+?)}", "g");
 
   try {
     const chtml: ITemplate = {
