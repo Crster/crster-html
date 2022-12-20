@@ -17,6 +17,9 @@
     "index.js",
     "/dist"
   ],
+  "publishConfig": {
+    "access": "public"
+  },
   "keywords": [
     "template engine",
     "html",
