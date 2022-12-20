@@ -1,5 +1,9 @@
 import fs from "fs";
+import path from "path";
+import ITemplate from "./ITemplate";
 import render from "./render";
+
+const expressField = ["_locals", "cache", "settings"];
 
 function expressView(
   filePath: string,
@@ -8,7 +12,23 @@ function expressView(
 ) {
   fs.readFile(filePath, (err, content) => {
     if (err) return callback(err);
-    const rendered = render(content.toString(), options);
+
+    const template: ITemplate = {
+      currentWorkingDirectory: options.settings.views || path.dirname(filePath),
+      defaultFileExtension: options.settings["view engine"] || "chtml",
+      template: content.toString(),
+    };
+
+    const input = {};
+    for (const inputKey in options) {
+      if (!expressField.includes(inputKey)) {
+        if (Object.prototype.hasOwnProperty.call(options, inputKey)) {
+          input[inputKey] = options[inputKey];
+        }
+      }
+    }
+
+    const rendered = render(template, input);
     return callback(null, rendered);
   });
 }

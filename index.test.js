@@ -87,7 +87,28 @@ test("render view", () => {
     data
   );
 
-  expect(result).toBe("\r\n<p>Hi, Hello World</p>\r\nThis is a footer");
+  expect(result).toBe("\r\n    <h1></h1>\r\n\r\n\r\n<p>Hi, Hello World</p>\r\nThis is a footer");
+});
+
+test("render view + args", () => {
+  const data = {
+    world: "Hello",
+    hello: "World",
+  };
+
+  const template =
+    "<view {layout({ title: \"Earth\" })}><block {footer}>This is a footer</block><p>Hi, {world} {hello}</p></view>";
+
+  const result = crsterHtml.render(
+    {
+      currentWorkingDirectory: "./components",
+      defaultFileExtension: "html",
+      template,
+    },
+    data
+  );
+
+  expect(result).toBe("\r\n    <h1>Earth</h1>\r\n\r\n\r\n<p>Hi, Hello World</p>\r\nThis is a footer");
 });
 
 test("render script", () => {

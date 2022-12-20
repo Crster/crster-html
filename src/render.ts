@@ -20,7 +20,10 @@ function renderView(block: IBlock, input?: IInput): string {
       defaultFileExtension: block.defaultFileExtension,
       template: fs.readFileSync(viewPath).toString(),
     };
-    let renderedView = render(viewTemplate, input);
+    let renderedView = render(
+      viewTemplate,
+      block.args ? { ...input, ...block.args } : input
+    );
 
     const template: ITemplate = {
       currentWorkingDirectory: block.currentWorkingDirectory,
@@ -42,7 +45,7 @@ function renderView(block: IBlock, input?: IInput): string {
 
     for (const vb of Object.values(viewBlocks)) {
       if (viewBodyBlocks[vb.header]) {
-        viewBlocks[vb.header].body.push(...viewBodyBlocks[vb.header].body)
+        viewBlocks[vb.header].body.push(...viewBodyBlocks[vb.header].body);
       }
     }
 
@@ -69,7 +72,7 @@ function renderBlock(block: IBlock, input?: IInput): string {
       template: block.body,
     };
 
-    body = render(template, input);
+    body = render(template, block.args ? { ...input, ...block.args } : input);
   }
 
   return `<< header="${block.header}" body="${body}">>`;
@@ -128,13 +131,13 @@ function renderCode(block: IBlock, input?: IInput): string {
   if (Array.isArray(value)) {
     return value.join("");
   } else {
-    return value;
+    return value ?? "";
   }
 }
 
 function render(template: ITemplate | string, input?: IInput): string {
   const viewRegx = new RegExp("<view\\s+{(.+?)}>(.+)<\\/view>", "gsi");
-  const slBlockRegx = new RegExp("<block\\s+{(.+?)}\\s+\\/>", "gsi");
+  const slBlockRegx = new RegExp("<block\\s+{(.+?)}\\s+\\/>", "gi");
   const mlBlockRegx = new RegExp("<block\\s+{(.+?)}>(.+?)<\\/block>", "gsi");
   const forRegx = new RegExp("<for\\s+{(.+?)}>(.+)<\\/for>", "gsi");
   const switchBlockRegx = new RegExp(
@@ -165,7 +168,25 @@ function render(template: ITemplate | string, input?: IInput): string {
       .replace(
         viewRegx,
         (match: string, header: string, body: string): string => {
-          return renderView({ ...chtml, template: match, header, body }, input);
+          const withArgs = /(.*?)\((.*)\)/gi.exec(header);
+
+          if (withArgs) {
+            return renderView(
+              {
+                ...chtml,
+                template: match,
+                header: withArgs[1],
+                args: evaluate(`(${withArgs[2]})`, input),
+                body,
+              },
+              input
+            );
+          } else {
+            return renderView(
+              { ...chtml, template: match, header, body },
+              input
+            );
+          }
         }
       )
       .replace(slBlockRegx, (match: string, header: string): string => {
@@ -177,10 +198,25 @@ function render(template: ITemplate | string, input?: IInput): string {
       .replace(
         mlBlockRegx,
         (match: string, header: string, body: string): string => {
-          return renderBlock(
-            { ...chtml, template: match, header, body },
-            input
-          );
+          const withArgs = /(.*?)\((.*)\)/gi.exec(header);
+
+          if (withArgs) {
+            return renderBlock(
+              {
+                ...chtml,
+                template: match,
+                header: withArgs[1],
+                args: evaluate(`(${withArgs[2]})`, input),
+                body,
+              },
+              input
+            );
+          } else {
+            return renderBlock(
+              { ...chtml, template: match, header, body },
+              input
+            );
+          }
         }
       )
       .replace(

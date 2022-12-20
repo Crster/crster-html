@@ -9,7 +9,7 @@ function evaluate(code: string, input?: IInput): any {
   try {
     return Function(tmp).call(input);
   } catch {
-    return "";
+    return null;
   }
 }
 
