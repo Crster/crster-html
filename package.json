@@ -5,9 +5,9 @@
   "main": "index.js",
   "scripts": {
     "build": "tsc",
-    "test": "npm run build && jest index.test.js",
+    "test": "jest index.test.js",
     "start": "npm run build && node index.js",
-    "publish": "npm run build && np"
+    "publish:np": "npm run build && np"
   },
   "repository": {
     "type": "git",

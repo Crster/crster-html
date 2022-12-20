@@ -137,7 +137,7 @@ function renderCode(block: IBlock, input?: IInput): string {
 
 function render(template: ITemplate | string, input?: IInput): string {
   const viewRegx = new RegExp("<view\\s+{(.+?)}>(.+)<\\/view>", "gsi");
-  const slBlockRegx = new RegExp("<block\\s+{(.+?)}\\s+\\/>", "gi");
+  const slBlockRegx = new RegExp("<block\\s+{(.+?)}\\s*\\/>", "gi");
   const mlBlockRegx = new RegExp("<block\\s+{(.+?)}>(.+?)<\\/block>", "gsi");
   const forRegx = new RegExp("<for\\s+{(.+?)}>(.+)<\\/for>", "gsi");
   const switchBlockRegx = new RegExp(
