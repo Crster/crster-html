@@ -7,12 +7,16 @@
     "build": "tsc",
     "test": "npm run build && jest index.test.js",
     "start": "npm run build && node index.js",
-    "publish": "np"
+    "publish": "npm run build && np"
   },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/Crster/crster-html.git"
   },
+  "files": [
+    "index.js",
+    "/dist"
+  ],
   "keywords": [
     "template engine",
     "html",
