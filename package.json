@@ -1,6 +1,6 @@
 {
   "name": "@crster9600/crster-html",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "description": "html like template engine with added magic",
   "main": "index.js",
   "scripts": {
