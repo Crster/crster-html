@@ -119,7 +119,7 @@ test("render script", () => {
 
   const result = crsterHtml.render(`
     <script>
-      let name = "{name}" + {age};
+      let name = \`{age}$\{{name}\}\`;
       
       function setName(newName){
         name = newName;
@@ -127,5 +127,26 @@ test("render script", () => {
     </script>
   `, data);
 
-  expect(result).toContain(`let name = "${data.name}" + ${data.age}`);
+  expect(result).toContain("let name = `"+ data.age +"${"+ data.name +"}`");
+})
+
+test("render subview", () => {
+  const data = {
+    world: "Hello",
+    hello: "World",
+  };
+
+  const template =
+    "<view {layout}><block {footer}>This is a footer<view {sub}/></block><p>Hi, {world} {hello}</p></view>";
+
+  const result = crsterHtml.render(
+    {
+      currentWorkingDirectory: "./components",
+      defaultFileExtension: "html",
+      template,
+    },
+    data
+  );
+
+  expect(result).toBe("\r\n    <h1></h1>\r\n\r\n\r\n<p>Hi, Hello World</p>\r\nThis is a footer<p>This is a subview</p>");
 })

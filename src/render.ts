@@ -136,8 +136,9 @@ function renderCode(block: IBlock, input?: IInput): string {
 }
 
 function render(template: ITemplate | string, input?: IInput): string {
-  const viewRegx = new RegExp("<view\\s+{(.+?)}>(.+)<\\/view>", "gsi");
-  const slBlockRegx = new RegExp("<block\\s+{(.+?)}\\s*\\/>", "gi");
+  const slViewRegx = new RegExp("<view\\s+{([^<>\\s]+?)}\\s*\\/>", "gi");
+  const mlViewRegx = new RegExp("<view\\s+{(.+?)}>(.+?)<\\/view>", "gsi");
+  const slBlockRegx = new RegExp("<block\\s+{([^<>\\s]+?)}\\s*\\/>", "gi");
   const mlBlockRegx = new RegExp("<block\\s+{(.+?)}>(.+?)<\\/block>", "gsi");
   const forRegx = new RegExp("<for\\s+{(.+?)}>(.+)<\\/for>", "gsi");
   const switchBlockRegx = new RegExp(
@@ -166,7 +167,31 @@ function render(template: ITemplate | string, input?: IInput): string {
 
     return chtml.template
       .replace(
-        viewRegx,
+        slViewRegx,
+        (match: string, header: string): string => {
+          const withArgs = /(.*?)\((.*)\)/gi.exec(header);
+
+          if (withArgs) {
+            return renderView(
+              {
+                ...chtml,
+                template: match,
+                header: withArgs[1],
+                args: evaluate(`(${withArgs[2]})`, input),
+                body: "",
+              },
+              input
+            );
+          } else {
+            return renderView(
+              { ...chtml, template: match, header, body: "" },
+              input
+            );
+          }
+        }
+      )
+      .replace(
+        mlViewRegx,
         (match: string, header: string, body: string): string => {
           const withArgs = /(.*?)\((.*)\)/gi.exec(header);
 
@@ -189,12 +214,30 @@ function render(template: ITemplate | string, input?: IInput): string {
           }
         }
       )
-      .replace(slBlockRegx, (match: string, header: string): string => {
-        return renderBlock(
-          { ...chtml, template: match, header, body: "" },
-          input
-        );
-      })
+      .replace(
+        slBlockRegx,
+        (match: string, header: string): string => {
+          const withArgs = /(.*?)\((.*)\)/gi.exec(header);
+
+          if (withArgs) {
+            return renderBlock(
+              {
+                ...chtml,
+                template: match,
+                header: withArgs[1],
+                args: evaluate(`(${withArgs[2]})`, input),
+                body: "",
+              },
+              input
+            );
+          } else {
+            return renderBlock(
+              { ...chtml, template: match, header, body: "" },
+              input
+            );
+          }
+        }
+      )
       .replace(
         mlBlockRegx,
         (match: string, header: string, body: string): string => {
